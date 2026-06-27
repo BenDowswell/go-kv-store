@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 )
 
 type KVStore struct {
+	mu    sync.RWMutex
 	store map[string]string
 }
 
@@ -18,16 +20,22 @@ func NewKVStore() *KVStore {
 }
 
 func (k *KVStore) Get(key string) (string, bool) {
+	k.mu.RLock()
+	defer k.mu.RUnlock()
 	value, ok := k.store[key]
 	return value, ok
 
 }
 
 func (k *KVStore) Set(key, value string) {
+	k.mu.Lock()       
+	defer k.mu.Unlock()
 	k.store[key] = value
 }
 
 func (k *KVStore) Delete(key string) {
+	k.mu.Lock()       
+	defer k.mu.Unlock()
 	delete(k.store, key)
 }
 
@@ -39,7 +47,7 @@ func (k *KVStore) PrintValue(key string) {
 		fmt.Println("key not found")
 	}
 }
-func Help() {
+func help() {
 	fmt.Println("Commands:")
 	fmt.Println("set <key> <value>")
 	fmt.Println("get <key>")
@@ -99,7 +107,7 @@ func main() {
 			fmt.Println("OK")
 
 		case "help":
-			Help()
+			help()
 
 		case "exit":
 			return
