@@ -1,16 +1,18 @@
-package main
+package server
 
 import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/BenDowswell/go-kv-store/kvstore"
 )
 
 type SetRequest struct {
 	Value string `json:"value"`
 }
 
-func httpserver(store *KVStore) {
+func Start(store *kvstore.KVStore) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", getHealth)
 	mux.HandleFunc("GET /kv/{key}", func(w http.ResponseWriter, r *http.Request) {
@@ -31,7 +33,7 @@ func getHealth(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Hello World!")
 }
 
-func getKey(w http.ResponseWriter, r *http.Request, store *KVStore) {
+func getKey(w http.ResponseWriter, r *http.Request, store *kvstore.KVStore) {
 	key := r.PathValue("key")
 
 	value, ok := store.Get(key)
@@ -42,7 +44,7 @@ func getKey(w http.ResponseWriter, r *http.Request, store *KVStore) {
 	fmt.Fprintln(w, value)
 }
 
-func updateKey(w http.ResponseWriter, r *http.Request, store *KVStore) {
+func updateKey(w http.ResponseWriter, r *http.Request, store *kvstore.KVStore) {
 	key := r.PathValue("key")
 
 	var req SetRequest
@@ -61,7 +63,7 @@ func updateKey(w http.ResponseWriter, r *http.Request, store *KVStore) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func deleteKey(w http.ResponseWriter, r *http.Request, store *KVStore) {
+func deleteKey(w http.ResponseWriter, r *http.Request, store *kvstore.KVStore) {
 	key := r.PathValue("key")
 
 	store.Delete(key)

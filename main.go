@@ -1,6 +1,11 @@
 package main
 
+import (
+	"github.com/BenDowswell/go-kv-store/kvstore"
+	"github.com/BenDowswell/go-kv-store/server"
+)
+
 func main() {
-	store := NewKVStore()
-	httpserver(store)
+	kv := kvstore.NewKVStore()
+	server.Start(kv)
 }
