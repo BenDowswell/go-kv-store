@@ -17,9 +17,9 @@ func (k *KVStore) PrintValue(key string) {
 }
 func help() {
 	fmt.Println("Commands:")
-	fmt.Println("set <key> <value>")
-	fmt.Println("get <key>")
-	fmt.Println("delete <key>")
+	fmt.Println("set key value")
+	fmt.Println("get key")
+	fmt.Println("delete key")
 	fmt.Println("exit")
 }
 
@@ -51,14 +51,14 @@ func (k *KVStore) RunConsole() {
 		switch command {
 		case "get":
 			if len(parts) != 2 {
-				fmt.Println("usage: get <key>")
+				fmt.Println("usage: get key")
 				continue
 			}
 			k.PrintValue(parts[1])
 
 		case "set":
 			if len(parts) != 3 {
-				fmt.Println("usage: set <key> <value>")
+				fmt.Println("usage: set key value")
 				continue
 			}
 			k.Set(parts[1], parts[2])
@@ -66,7 +66,7 @@ func (k *KVStore) RunConsole() {
 
 		case "delete":
 			if len(parts) != 2 {
-				fmt.Println("usage: delete <key>")
+				fmt.Println("usage: delete key")
 				continue
 			}
 			k.Delete(parts[1])
