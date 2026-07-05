@@ -12,7 +12,7 @@ type SetRequest struct {
 	Value string `json:"value"`
 }
 
-func Start(store *kvstore.KVStore) {
+func Routes(store *kvstore.KVStore) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", getHealth)
 	mux.HandleFunc("GET /kv/{key}", func(w http.ResponseWriter, r *http.Request) {
@@ -25,8 +25,13 @@ func Start(store *kvstore.KVStore) {
 		deleteKey(w, r, store)
 	})
 
+	return mux
+}
+
+func Start(store *kvstore.KVStore) error {
+	handler := Routes(store)
 	fmt.Println("HTTP Server Listening on 8080")
-	http.ListenAndServe(":8080", mux)
+	return http.ListenAndServe(":8080", handler)
 }
 
 func getHealth(w http.ResponseWriter, r *http.Request) {

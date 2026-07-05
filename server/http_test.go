@@ -1,6 +1,7 @@
 package server
 
 import (
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -126,7 +127,7 @@ func TestDeleteMissingKeyReturnsSuccess(t *testing.T) {
 	req := httptest.NewRequest(http.MethodDelete, "/kv/name", nil)
 	req.SetPathValue("key", "name")
 	rr := httptest.NewRecorder()
-	
+
 	deleteKey(rr, req, store)
 
 	// expect 200
@@ -149,5 +150,32 @@ func TestPutInvalidJSONReturns400(t *testing.T) {
 
 	if rr.Code != http.StatusBadRequest {
 		t.Errorf("expected status 400, got %d", rr.Code)
+	}
+}
+
+func TestHealthIntegration(t *testing.T) {
+	store := kvstore.NewKVStore()
+
+	handler := Routes(store)
+	testServer := httptest.NewServer(handler)
+	defer testServer.Close()
+
+	resp, err := http.Get(testServer.URL + "/health")
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("expected status 200, got %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("failed to read response body: %v", err)
+	}
+
+	if string(body) != "Hello World!" {
+		t.Errorf("expected Hello World!, got %q", string(body))
 	}
 }
