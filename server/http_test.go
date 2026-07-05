@@ -76,8 +76,8 @@ func TestPutStoresNewValue(t *testing.T) {
 		t.Errorf("expected name to be Ben and ok true, got value=%q ok=%v", value, ok)
 	}
 
-	if rr.Code != http.StatusOK {
-		t.Errorf("expected status 200, got %d", rr.Code)
+	if rr.Code != http.StatusNoContent {
+		t.Errorf("expected status 204, got %d", rr.Code)
 	}
 }
 func TestPutOverwritesExistingValue(t *testing.T) {
@@ -95,8 +95,8 @@ func TestPutOverwritesExistingValue(t *testing.T) {
 		t.Errorf("expected name to be Tony and ok true, got value=%q ok=%v", value, ok)
 	}
 
-	if rr.Code != http.StatusOK {
-		t.Errorf("expected status 200, got %d", rr.Code)
+	if rr.Code != http.StatusNoContent {
+		t.Errorf("expected status 204, got %d", rr.Code)
 	}
 
 }
@@ -110,9 +110,9 @@ func TestDeleteRemovesExistingKey(t *testing.T) {
 	rr := httptest.NewRecorder()
 	deleteKey(rr, req, store)
 
-	// expect 200
-	if rr.Code != http.StatusOK {
-		t.Errorf("expected status 200, got %d", rr.Code)
+	// expect 204
+	if rr.Code != http.StatusNoContent {
+		t.Errorf("expected status 204, got %d", rr.Code)
 	}
 
 	_, ok := store.Get("name")
@@ -130,9 +130,9 @@ func TestDeleteMissingKeyReturnsSuccess(t *testing.T) {
 
 	deleteKey(rr, req, store)
 
-	// expect 200
-	if rr.Code != http.StatusOK {
-		t.Errorf("expected deleting a missing key to return 200, got %d", rr.Code)
+	// expect 204
+	if rr.Code != http.StatusNoContent {
+		t.Errorf("expected status 204, got %d", rr.Code)
 	}
 
 }
@@ -218,7 +218,7 @@ func TestEndToEndIntegration(t *testing.T) {
 		t.Errorf("expected 200, got %d", getName.StatusCode)
 	}
 
-	if string(bodyBytes) != "Ben" {
+	if string(bodyBytes) != "Ben\n" {
 		t.Errorf("expected Ben, got %q", string(bodyBytes))
 	}
 
@@ -229,7 +229,7 @@ func TestEndToEndIntegration(t *testing.T) {
 	}
 	delResp, err := client.Do(deleteReq)
 	if err != nil {
-		t.Fatalf("PUT request failed: %v", err)
+		t.Fatalf("DELETE request failed: %v", err)
 	}
 	defer delResp.Body.Close()
 
