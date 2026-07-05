@@ -137,8 +137,6 @@ func TestDeleteMissingKeyReturnsSuccess(t *testing.T) {
 
 }
 
-func TestGetAfterDeleteReturns404(t *testing.T) {}
-
 func TestPutInvalidJSONReturns400(t *testing.T) {
 	store := kvstore.NewKVStore()
 	body := strings.NewReader(`{"value":`)
@@ -177,5 +175,76 @@ func TestHealthIntegration(t *testing.T) {
 
 	if string(body) != "Hello World!" {
 		t.Errorf("expected Hello World!, got %q", string(body))
+	}
+}
+
+func TestEndToEndIntegration(t *testing.T) {
+	store := kvstore.NewKVStore()
+
+	handler := Routes(store)
+	testServer := httptest.NewServer(handler)
+	defer testServer.Close()
+
+	body := strings.NewReader(`{"value":"Ben"}`)
+	req, err := http.NewRequest(http.MethodPut, testServer.URL+"/kv/name", body)
+	if err != nil {
+		t.Fatalf("failed to create request: %v", err)
+	}
+
+	// Put a value in
+	client := http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatalf("PUT request failed: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusNoContent {
+		t.Errorf("expected 204, got %d", resp.StatusCode)
+	}
+
+	// Get value out
+	getName, err := http.Get(testServer.URL + "/kv/name")
+	if err != nil {
+		t.Fatalf("failed to get key: %v", err)
+	}
+	defer getName.Body.Close()
+	bodyBytes, err := io.ReadAll(getName.Body)
+	if err != nil {
+		t.Fatalf("failed to read body: %v", err)
+	}
+
+	if getName.StatusCode != http.StatusOK {
+		t.Errorf("expected 200, got %d", getName.StatusCode)
+	}
+
+	if string(bodyBytes) != "Ben" {
+		t.Errorf("expected Ben, got %q", string(bodyBytes))
+	}
+
+	// Delete value
+	deleteReq, err := http.NewRequest(http.MethodDelete, testServer.URL+"/kv/name", nil)
+	if err != nil {
+		t.Fatalf("DELETE request failed: %v", err)
+	}
+	delResp, err := client.Do(deleteReq)
+	if err != nil {
+		t.Fatalf("PUT request failed: %v", err)
+	}
+	defer delResp.Body.Close()
+
+	if delResp.StatusCode != http.StatusNoContent {
+		t.Errorf("expected 204, got %d", delResp.StatusCode)
+	}
+
+	// GET but expect 404
+	getName404, err := http.Get(testServer.URL + "/kv/name")
+	if err != nil {
+		t.Fatalf("failed to get key: %v", err)
+	}
+	defer getName404.Body.Close()
+
+	if getName404.StatusCode != http.StatusNotFound {
+		t.Errorf("expected status 404, got %d", getName404.StatusCode)
 	}
 }
