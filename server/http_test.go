@@ -13,13 +13,10 @@ import (
 func TestGetHealth(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
 	rr := httptest.NewRecorder()
-
 	getHealth(rr, req)
-
 	if rr.Code != http.StatusOK {
 		t.Errorf("expected status 200, got %d", rr.Code)
 	}
-
 	if rr.Body.String() != "Hello World!" {
 		t.Errorf("expected Hello World!, got %q", rr.Body.String())
 	}
@@ -27,14 +24,10 @@ func TestGetHealth(t *testing.T) {
 
 func TestGetMissingKeyReturns404(t *testing.T) {
 	store := kvstore.NewKVStore()
-
 	req := httptest.NewRequest(http.MethodGet, "/kv/name", nil)
 	req.SetPathValue("key", "name")
-
 	rr := httptest.NewRecorder()
-
 	getKey(rr, req, store)
-
 	if rr.Code != http.StatusNotFound {
 		t.Errorf("expected status 404, got %d", rr.Code)
 	}
@@ -43,14 +36,10 @@ func TestGetMissingKeyReturns404(t *testing.T) {
 func TestGetExistingKeyReturnsValue(t *testing.T) {
 	store := kvstore.NewKVStore()
 	store.Set("name", "Ben")
-
 	req := httptest.NewRequest(http.MethodGet, "/kv/name", nil)
 	req.SetPathValue("key", "name")
-
 	rr := httptest.NewRecorder()
-
 	getKey(rr, req, store)
-
 	// expect 200
 	if rr.Code != http.StatusOK {
 		t.Errorf("expected status 200, got %d", rr.Code)
@@ -59,18 +48,15 @@ func TestGetExistingKeyReturnsValue(t *testing.T) {
 	if rr.Body.String() != "Ben\n" {
 		t.Errorf("expected body %q, got %q", "Ben\n", rr.Body.String())
 	}
-
 }
+
 func TestPutStoresNewValue(t *testing.T) {
 	store := kvstore.NewKVStore()
-
 	body := strings.NewReader(`{"value":"Ben"}`)
 	req := httptest.NewRequest(http.MethodPut, "/kv/name", body)
 	req.SetPathValue("key", "name")
 	rr := httptest.NewRecorder()
-
 	updateKey(rr, req, store)
-
 	value, ok := store.Get("name")
 	if !ok || value != "Ben" {
 		t.Errorf("expected name to be Ben and ok true, got value=%q ok=%v", value, ok)
@@ -80,6 +66,7 @@ func TestPutStoresNewValue(t *testing.T) {
 		t.Errorf("expected status 204, got %d", rr.Code)
 	}
 }
+
 func TestPutOverwritesExistingValue(t *testing.T) {
 	store := kvstore.NewKVStore()
 	store.Set("name", "Ben")
@@ -87,7 +74,6 @@ func TestPutOverwritesExistingValue(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPut, "/kv/name", body)
 	req.SetPathValue("key", "name")
 	rr := httptest.NewRecorder()
-
 	updateKey(rr, req, store)
 
 	value, ok := store.Get("name")

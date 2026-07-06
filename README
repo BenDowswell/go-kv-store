@@ -1,29 +1,128 @@
 # Go KV Store
-
 A simple in-memory key-value store written in Go as part of my Go learning journey.
-
+ 
 ## Features
-
-- Set values
-- Get values
-- Delete values
-- Interactive console interface
-- Help command
-- Handles values containing spaces
-
-## Commands
-
-```text
-set <key> <value>
-get <key>
-delete <key>
-help
-exit
+ 
+- Set, get, and delete values
+- HTTP API interface
+- TCP plain-text protocol interface
+- Both interfaces share the same underlying store
+- Concurrency safe (read/write mutex)
+- Unit and integration tests
+ 
+## Running
+ 
+```bash
+go run main.go
 ```
-
+ 
+Both servers start simultaneously. By default:
+- HTTP on port `8080`
+- TCP on port `9090`
+ 
+Ports can be overridden with flags:
+ 
+```bash
+go run main.go -http :8080 -tcp :9090
+```
+ 
+---
+ 
+## HTTP API
+ 
+### Health check
+ 
+```
+GET /health
+```
+ 
+Returns `200 OK`.
+ 
+### Get a value
+ 
+```
+GET /kv/{key}
+```
+ 
+Returns `200 OK` with the value as plain text, or `404 Not Found` if the key does not exist.
+ 
+### Set / update a value
+ 
+```
+PUT /kv/{key}
+Content-Type: application/json
+ 
+{"value": "your-value"}
+```
+ 
+Returns `204 No Content` on success.
+ 
+### Delete a value
+ 
+```
+DELETE /kv/{key}
+```
+ 
+Returns `204 No Content` (idempotent — deleting a missing key also returns 204).
+ 
+### HTTP Example
+ 
+```bash
+# Set a value
+curl -X PUT http://localhost:8080/kv/name \
+  -H "Content-Type: application/json" \
+  -d '{"value":"Ben"}'
+ 
+# Get a value
+curl http://localhost:8080/kv/name
+ 
+# Delete a value
+curl -X DELETE http://localhost:8080/kv/name
+```
+ 
+---
+ 
+## TCP Protocol
+ 
+The TCP server listens for plain-text, newline-delimited commands. Each command returns a single line response.
+ 
+### Commands
+ 
+| Command | Description | Response |
+|---|---|---|
+| `GET <key>` | Retrieve a value | The value, or `NOT FOUND` |
+| `SET <key> <value>` | Store a value (value may contain spaces) | `OK` |
+| `DELETE <key>` | Remove a key | `OK` |
+| `HELP` | List available commands | Command summary |
+ 
+Errors are returned as `ERR <message>`.
+ 
+### TCP Example
+ 
+Connect with `nc` or `telnet`:
+ 
+```bash
+nc localhost 9090
+```
+ 
+Then send commands:
+ 
+```
+SET name Ben
+OK
+GET name
+Ben
+DELETE name
+OK
+GET name
+NOT FOUND
+HELP
+Commands: GET <key> | SET <key> <value> | DELETE <key> | HELP
+```
+ 
+---
+ 
 ## Future Improvements
-
-- HTTP API
-- Concurrency safety (mutex)
+ 
 - Persistent storage
-- Unit tests
+ 

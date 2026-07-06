@@ -1,36 +1,15 @@
+// Store is the interface implemented by all KV store backends.
+
 package kvstore
 
-import (
-	"sync"
-)
+ 
 
-type KVStore struct {
-	mu    sync.RWMutex
-	store map[string]string
-}
+type Store interface {
 
-func NewKVStore() *KVStore {
-	return &KVStore{
-		store: make(map[string]string),
-	}
-}
+    Get(key string) (string, bool)
 
-func (k *KVStore) Get(key string) (string, bool) {
-	k.mu.RLock()
-	defer k.mu.RUnlock()
-	value, ok := k.store[key]
-	return value, ok
+    Set(key, value string)
 
-}
+    Delete(key string)
 
-func (k *KVStore) Set(key, value string) {
-	k.mu.Lock()
-	defer k.mu.Unlock()
-	k.store[key] = value
-}
-
-func (k *KVStore) Delete(key string) {
-	k.mu.Lock()
-	defer k.mu.Unlock()
-	delete(k.store, key)
 }
